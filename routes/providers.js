@@ -5,7 +5,7 @@ const {
   createProvider,
   updateProvider,
   deleteProvider,
-} = require("../controllers/Providers");
+} = require("../controllers/providers");
 
 // Include other resource routers
 const BookingRouter = require('./Bookings');

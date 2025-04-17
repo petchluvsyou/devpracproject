@@ -1,5 +1,5 @@
 const Provider = require("../models/Provider");
-const Booking = require('../models/Booking.js');
+const Booking = require('../models/Booking');
 
 // @desc    Get all Providers
 // @route   GET /api/v1/Providers
@@ -47,7 +47,7 @@ exports.getProviders = async (req, res, next) => {
     query = query.skip(startIndex).limit(limit);
 
     // Executing query
-    const Providers = await query;
+    const providers = await query;
 
     // Pagination result
     const pagination = {};
@@ -68,9 +68,9 @@ exports.getProviders = async (req, res, next) => {
 
     res.status(200).json({
         success: true,
-        count: Providers.length,
+        count: providers.length,
         pagination,
-        data: Providers
+        data: providers
     });
   } catch (err) {
     res.status(400).json({
@@ -84,7 +84,7 @@ exports.getProviders = async (req, res, next) => {
 // @access  Public
 exports.getProvider = async (req, res, next) => {
   try {
-    const Provider = await Provider.findById(req.params.id);
+    const provider = await Provider.findById(req.params.id);
 
     if (!Provider) {
       return res.status(400).json({ success: false });
@@ -92,7 +92,7 @@ exports.getProvider = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      data: Provider,
+      data: provider,
     });
   } catch (err) {
     res.status(400).json({
@@ -105,10 +105,10 @@ exports.getProvider = async (req, res, next) => {
 // @route   POST /api/v1/Providers
 // @access  Private
 exports.createProvider = async (req, res, next) => {
-  const Provider = await Provider.create(req.body);
+  const provider = await Provider.create(req.body);
   res
     .status(201)
-    .json({ success: true, msg: "Create new Providers", data: Provider });
+    .json({ success: true, msg: "Create new Providers", data: provider });
 };
 
 // @desc    Update Provider
@@ -116,7 +116,7 @@ exports.createProvider = async (req, res, next) => {
 // @access  Private
 exports.updateProvider = async (req, res, next) => {
   try {
-    const Provider = await Provider.findByIdAndUpdate(req.params.id, req.body, {
+    const provider = await Provider.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
     });
@@ -127,7 +127,7 @@ exports.updateProvider = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      data: Provider,
+      data: provider,
     });
   } catch (err) {
     res.status(400).json({
@@ -141,9 +141,9 @@ exports.updateProvider = async (req, res, next) => {
 // @access  Private
 exports.deleteProvider = async (req, res, next) => {
   try {
-    const Provider = await Provider.findById(req.params.id);
+    const provider = await Provider.findById(req.params.id);
 
-    if (!Provider) {
+    if (!provider) {
       return res.status(404).json({
           success: false,
           message: `Provider not found with id of ${req.params.id}`
