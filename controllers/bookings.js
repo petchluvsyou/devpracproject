@@ -92,6 +92,16 @@ exports.addBooking = async (req, res, next) => {
             });
         }
 
+        // limit bookings
+        const userBookingsCount = await Booking.countDocuments({ user: req.user.id });
+
+        if (userBookingsCount >= 3) {
+            return res.status(400).json({
+                success: false,
+                message: "You can only have a maximum of 3 bookings."
+            });
+        }
+
         const Booking = await Booking.create(req.body);
 
         res.status(200).json({
