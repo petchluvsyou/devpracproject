@@ -6,6 +6,15 @@ const UserSchema = new mongoose.Schema({
   name: {
     type: String,
     required: [true, "Please add a name"],
+  },  
+  phone: {
+    type: String,
+    required: [true, "Please add a phone number"],
+    unique: true,
+    match: [
+      /^\+?[0-9]{10,15}$/,
+      "Please add a valid phone number with country code",
+    ],
   },
   email: {
     type: String,
