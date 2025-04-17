@@ -1,28 +1,28 @@
 const express = require("express");
 const {
-  getHospitals,
-  getHospital,
-  createHospital,
-  updateHospital,
-  deleteHospital,
-} = require("../controllers/hospitals");
+  getProviders,
+  getProvider,
+  createProvider,
+  updateProvider,
+  deleteProvider,
+} = require("../controllers/Providers");
 
 // Include other resource routers
-const appointmentRouter = require('./appointments');
+const BookingRouter = require('./Bookings');
 
 const router = express.Router();
 
 const { protect, authorize } = require('../middleware/auth');
 
 // Re-route into other resource routers
-router.use('/:hospitalId/appointments/', appointmentRouter);
+router.use('/:ProviderId/Bookings/', BookingRouter);
 
-router.route("/").get(getHospitals).post(protect, authorize('admin'), createHospital);
+router.route("/").get(getProviders).post(protect, authorize('admin'), createProvider);
 router
   .route("/:id")
-  .get(getHospital)
-  .put(protect, authorize('admin'), updateHospital)
-  .delete(protect, authorize('admin'), deleteHospital);
+  .get(getProvider)
+  .put(protect, authorize('admin'), updateProvider)
+  .delete(protect, authorize('admin'), deleteProvider);
 
 module.exports = router;
 
@@ -30,7 +30,7 @@ module.exports = router;
 * @swagger
 * components:
 *   schemas: 
-*     Hospital:
+*     Provider:
 *       type: object
 *       required:
 *         - name
@@ -39,14 +39,14 @@ module.exports = router;
 *         id:
 *           type: string
 *           format: uuid
-*           description: The auto-generated id of the hospital
+*           description: The auto-generated id of the Provider
 *           example: d290f1ee-6c54-4b01-90e6-d701748f0851
 *         ลําดบั:
 *           type: string
 *           description: Ordinal number
 *         name:
 *           type: string
-*           description: Hospital name
+*           description: Provider name
 *         address:
 *           type: string
 *           description: House No., Street, Road
@@ -68,7 +68,7 @@ module.exports = router;
 *       example:
 *         id: 609bda561452242d88d36e37
 *         ลําดบั: )*)
-*         name: Happy Hospital 
+*         name: Happy Provider 
 *         address: 121 ถ.สขุมุวิท
 *         district: บางนา
 *         province: กรุงเทพมหานคร
@@ -80,122 +80,122 @@ module.exports = router;
 /**
 * @swagger
 * tags:
-*   name: Hospitals
-*   description: The hospitals managing API
+*   name: Providers
+*   description: The Providers managing API
 */
 
 /**
 * @swagger
-* /hospitals:
+* /Providers:
 *   get:
-*     summary: Returns the list of all the hospitals
-*     tags: [Hospitals]
+*     summary: Returns the list of all the Providers
+*     tags: [Providers]
 *     responses:
 *       200:
-*         description: The list of the hospitals
+*         description: The list of the Providers
 *         content:
 *           application/json:
 *             schema:
 *               type: array
 *               items:
-*                 $ref: '#/components/schemas/Hospital'
+*                 $ref: '#/components/schemas/Provider'
 */
 
 /**
 * @swagger
-* /hospitals/{id}:
+* /Providers/{id}:
 *   get:
-*     summary: Get the hospital by id
-*     tags: [Hospitals]
+*     summary: Get the Provider by id
+*     tags: [Providers]
 *     parameters:
 *       - in: path
 *         name: id
 *         schema:
 *           type: string
 *         required: true
-*         description: The hospital id
+*         description: The Provider id
 *     responses:
 *       200:
-*         description: The hospital description by id
+*         description: The Provider description by id
 *         content:
 *           application/json:
 *             schema:
-*               $ref: '#/components/schemas/Hospital'
+*               $ref: '#/components/schemas/Provider'
 *       404:
-*         description: The hospital was not found
+*         description: The Provider was not found
 */
 
 /**
 * @swagger
-* /hospitals:
+* /Providers:
 *   post:
-*     summary: Create a new hospital
-*     tags: [Hospitals]
+*     summary: Create a new Provider
+*     tags: [Providers]
 *     requestBody:
 *       required: true
 *       content:
 *         application/json:
 *           schema:
-*             $ref: '#/components/schemas/Hospital'
+*             $ref: '#/components/schemas/Provider'
 *     responses:
 *       201:
-*         description: The hospital was successfully created
+*         description: The Provider was successfully created
 *         content:
 *           application/json:
 *             schema:
-*               $ref: '#/components/schemas/Hospital'
+*               $ref: '#/components/schemas/Provider'
 *       500:
 *         description: Some server error
 */
 
 /**
 * @swagger
-* /hospitals/{id}:
+* /Providers/{id}:
 *  put:
-*    summary: Update the hospital by the id
-*    tags: [Hospitals]
+*    summary: Update the Provider by the id
+*    tags: [Providers]
 *    parameters:
 *      - in: path
 *        name: id
 *        schema:
 *          type: string
 *        required: true
-*        description: The hospital id
+*        description: The Provider id
 *    requestBody:
 *      required: true
 *      content:
 *        application/json:
 *          schema:
-*            $ref: '#/components/schemas/Hospital'
+*            $ref: '#/components/schemas/Provider'
 *    responses:
 *      200:
-*        description: The hospital was updated
+*        description: The Provider was updated
 *        content:
 *          application/json:
 *            schema:
-*              $ref: '#/components/schemas/Hospital'
+*              $ref: '#/components/schemas/Provider'
 *      404:
-*        description: The hospital was not found
+*        description: The Provider was not found
 *      500:
 *        description: Some error happened
 */
 
 /**
 * @swagger
-* /hospitals/{id}:
+* /Providers/{id}:
 *   delete:
-*     summary: Remove the hospital by id
-*     tags: [Hospitals]
+*     summary: Remove the Provider by id
+*     tags: [Providers]
 *     parameters:
 *       - in: path
 *         name: id
 *         schema:
 *           type: string
 *         required: true
-*         description: The hospital id
+*         description: The Provider id
 *     responses:
 *       200:
-*         description: The hospital was deleted
+*         description: The Provider was deleted
 *       404:
-*         description: The hospital was not found
+*         description: The Provider was not found
 */

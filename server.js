@@ -15,8 +15,8 @@ dotenv.config({ path: "./config/config.env" });
 connectDB();
 
 //mount files
-const hospitals = require("./routes/hospitals");
-const appointments = require('./routes/appointments')
+const Providers = require("./routes/Providers");
+const Bookings = require('./routes/Bookings')
 const auth = require("./routes/auth");
 
 const app = express();
@@ -41,8 +41,8 @@ max: 1000
 app.use(limiter);
 
 //mount routes
-app.use("/api/v1/hospitals", hospitals);
-app.use('/api/v1/appointments', appointments);
+app.use("/api/v1/Providers", Providers);
+app.use('/api/v1/Bookings', Bookings);
 app.use("/api/v1/auth", auth);
 
 const PORT = process.env.PORT || 5000;
