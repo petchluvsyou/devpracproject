@@ -9,7 +9,7 @@ exports.getBookings = async (req, res, next) => {
 
     if (req.user.role !== 'admin') {
         // General users can see only their Bookings
-        query = Booking.find({ user: req.user.id }).populate({
+        query = Booking.find({ user: req.user.id, isDeleted: false }).populate({
             path: 'Provider',
             select: 'name province tel'
         });
@@ -50,7 +50,7 @@ exports.getBookings = async (req, res, next) => {
 // @access  Public
 exports.getBooking = async (req, res, next) => {
     try {
-        const booking = await Booking.findById(req.params.id).populate({
+        const booking = await Booking.findOne({ _id: req.params.id, isDeleted: false }).populate({
             path: 'Provider',
             select: 'name description tel'
         });
@@ -93,7 +93,7 @@ exports.addBooking = async (req, res, next) => {
         }
 
         // limit bookings
-        const userBookingsCount = await Booking.countDocuments({ user: req.user.id });
+        const userBookingsCount = await Booking.countDocuments({ user: req.user.id, isDeleted: false });
 
         if (userBookingsCount >= 3) {
             return res.status(400).json({
@@ -122,7 +122,7 @@ exports.addBooking = async (req, res, next) => {
 // @access  Private
 exports.updateBooking = async (req, res, next) => {
     try {
-        let booking = await Booking.findById(req.params.id);
+        let booking = await Booking.findOne({ _id: req.params.id, isDeleted: false });
 
         if (!booking) {
             return res.status(404).json({
@@ -131,7 +131,6 @@ exports.updateBooking = async (req, res, next) => {
             });
         }
 
-        // Make sure the user is the Booking owner or an admin
         if (booking.user.toString() !== req.user.id && req.user.role !== 'admin') {
             return res.status(401).json({
                 success: false,
@@ -157,21 +156,21 @@ exports.updateBooking = async (req, res, next) => {
     }
 };
 
-// @desc    Delete Booking
+
+// @desc    Delete Booking (Soft Delete)
 // @route   DELETE /api/v1/Bookings/:id
 // @access  Private
 exports.deleteBooking = async (req, res, next) => {
     try {
         const booking = await Booking.findById(req.params.id);
 
-        if (!booking) {
+        if (!booking || booking.isDeleted) {
             return res.status(404).json({
                 success: false,
-                message: `No Booking with the id of ${req.params.id}`
+                message: `No active Booking with the id of ${req.params.id}`
             });
         }
 
-        // Make sure the user is the Booking owner or an admin
         if (booking.user.toString() !== req.user.id && req.user.role !== 'admin') {
             return res.status(401).json({
                 success: false,
@@ -179,17 +178,45 @@ exports.deleteBooking = async (req, res, next) => {
             });
         }
 
-        await Booking.deleteOne();
+        booking.isDeleted = true;
+        await booking.save();
 
         res.status(200).json({
             success: true,
-            data: {}
+            message: 'Booking has been marked as deleted',
+            data: booking
         });
     } catch (error) {
         console.log(error);
         return res.status(500).json({
             success: false,
             message: "Cannot delete Booking"
+        });
+    }
+};
+
+
+// @desc    Get past Bookings including deleted
+// @route   GET /api/v1/bookings/past
+// @access  Private
+exports.getPastBookings = async (req, res, next) => {
+    try {
+        const bookings = await Booking.find({ user: req.user.id }) // includes both deleted & non-deleted
+            .populate({
+                path: 'Provider',
+                select: 'name province tel'
+            });
+
+        res.status(200).json({
+            success: true,
+            count: bookings.length,
+            data: bookings
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            success: false,
+            message: 'Cannot retrieve past bookings'
         });
     }
 };

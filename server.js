@@ -16,7 +16,7 @@ connectDB();
 
 //mount files
 const Providers = require("./routes/providers");
-const Bookings = require('./routes/bookings')
+const Bookings = require("./routes/bookings");
 const auth = require("./routes/auth");
 
 const app = express();
