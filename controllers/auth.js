@@ -26,7 +26,7 @@ const sendTokenResponse = (user, statusCode, res) => {
 // @access  Public
 exports.register = async (req, res, next) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, phone, email, password, role } = req.body;
 
     //create user
     const user = await User.create({
@@ -90,6 +90,37 @@ exports.getMe = async (req, res, next) => {
         success: true,
         data: user
     });
+};
+
+// @desc    Update user profile
+// @route   PUT /api/v1/auth/:id
+// @access  Private
+exports.updateUser = async (req, res, next) => {
+  try {
+    const { name, email, phone } = req.body;
+    const userId = req.params.id;
+
+    // Check if the user is trying to update their own data or if they are an admin
+    if (req.user.role !== "admin" && req.user.id !== userId) {
+      return res.status(403).json({ success: false, msg: 'You are not authorized to update this user' });
+    }
+
+    // Find the user by ID and update their details
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { name, email, phone },
+      { new: true, runValidators: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ success: false, msg: 'User not found' });
+    }
+
+    res.status(200).json({ success: true, data: user });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, msg: 'Server error' });
+  }
 };
 
 //@desc Log user out / clear cookie
