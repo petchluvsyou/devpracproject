@@ -82,9 +82,9 @@ exports.getBooking = async (req, res, next) => {
 exports.addBooking = async (req, res, next) => {
     try {
         req.body.Provider = req.params.ProviderId;
+        req.body.user = req.user.id; 
 
         const provider = await Provider.findById(req.params.ProviderId);
-
         if (!provider) {
             return res.status(404).json({
                 success: false,
@@ -94,7 +94,6 @@ exports.addBooking = async (req, res, next) => {
 
         // limit bookings
         const userBookingsCount = await Booking.countDocuments({ user: req.user.id, isDeleted: false });
-
         if (userBookingsCount >= 3) {
             return res.status(400).json({
                 success: false,
