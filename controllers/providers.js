@@ -1,8 +1,8 @@
 const Provider = require("../models/Provider");
 const Booking = require('../models/Booking');
 
-// @desc    Get all Providers
-// @route   GET /api/v1/Providers
+// @desc    Get all providers
+// @route   GET /api/v1/providers
 // @access  Public
 exports.getProviders = async (req, res, next) => {
   try {
@@ -20,21 +20,20 @@ exports.getProviders = async (req, res, next) => {
     queryStr = queryStr.replace(/\b(gt|gte|lt|lte|in)\b/g, match => `$${match}`);
 
     // Finding resource
-    query = Provider.find(JSON.parse(queryStr)).populate('Bookings');
+    query = Provider.find(JSON.parse(queryStr)).populate('bookings');
 
-
-    // Select Fields
+    // Select fields
     if (req.query.select) {
-        const fields = req.query.select.split(',').join(' ');
-        query = query.select(fields);
+      const fields = req.query.select.split(',').join(' ');
+      query = query.select(fields);
     }
 
     // Sort
     if (req.query.sort) {
-        const sortBy = req.query.sort.split(',').join(' ');
-        query = query.sort(sortBy);
+      const sortBy = req.query.sort.split(',').join(' ');
+      query = query.sort(sortBy);
     } else {
-        query = query.sort('-createdAt');
+      query = query.sort('-createdAt');
     }
 
     // Pagination
@@ -46,48 +45,50 @@ exports.getProviders = async (req, res, next) => {
 
     query = query.skip(startIndex).limit(limit);
 
-    // Executing query
     const providers = await query;
 
     // Pagination result
     const pagination = {};
-
     if (endIndex < total) {
-        pagination.next = {
-            page: page + 1,
-            limit
-        };
+      pagination.next = {
+        page: page + 1,
+        limit,
+      };
     }
-
     if (startIndex > 0) {
-        pagination.prev = {
-            page: page - 1,
-            limit
-        };
+      pagination.prev = {
+        page: page - 1,
+        limit,
+      };
     }
 
     res.status(200).json({
-        success: true,
-        count: providers.length,
-        pagination,
-        data: providers
+      success: true,
+      count: providers.length,
+      pagination,
+      data: providers,
     });
   } catch (err) {
+    console.error(err);
     res.status(400).json({
       success: false,
+      message: "Error fetching providers",
     });
   }
 };
 
-// @desc    Get single Provider
-// @route   GET /api/v1/Providers/:id
+// @desc    Get single provider
+// @route   GET /api/v1/providers/:id
 // @access  Public
 exports.getProvider = async (req, res, next) => {
   try {
     const provider = await Provider.findById(req.params.id);
 
-    if (!Provider) {
-      return res.status(400).json({ success: false });
+    if (!provider) {
+      return res.status(404).json({
+        success: false,
+        message: `No provider found with ID ${req.params.id}`,
+      });
     }
 
     res.status(200).json({
@@ -95,24 +96,36 @@ exports.getProvider = async (req, res, next) => {
       data: provider,
     });
   } catch (err) {
+    console.error(err);
     res.status(400).json({
       success: false,
+      message: "Error fetching provider",
     });
   }
 };
 
-// @desc    Create new Provider
-// @route   POST /api/v1/Providers
+// @desc    Create new provider
+// @route   POST /api/v1/providers
 // @access  Private
 exports.createProvider = async (req, res, next) => {
-  const provider = await Provider.create(req.body);
-  res
-    .status(201)
-    .json({ success: true, msg: "Create new Providers", data: provider });
+  try {
+    const provider = await Provider.create(req.body);
+    res.status(201).json({
+      success: true,
+      message: "Created new provider",
+      data: provider,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(400).json({
+      success: false,
+      message: "Failed to create provider",
+    });
+  }
 };
 
-// @desc    Update Provider
-// @route   PUT /api/v1/Providers/:id
+// @desc    Update provider
+// @route   PUT /api/v1/providers/:id
 // @access  Private
 exports.updateProvider = async (req, res, next) => {
   try {
@@ -121,8 +134,11 @@ exports.updateProvider = async (req, res, next) => {
       runValidators: true,
     });
 
-    if (!Provider) {
-      return res.status(400).json({ success: false });
+    if (!provider) {
+      return res.status(404).json({
+        success: false,
+        message: `No provider found with ID ${req.params.id}`,
+      });
     }
 
     res.status(200).json({
@@ -130,14 +146,16 @@ exports.updateProvider = async (req, res, next) => {
       data: provider,
     });
   } catch (err) {
+    console.error(err);
     res.status(400).json({
       success: false,
+      message: "Failed to update provider",
     });
   }
 };
 
-// @desc    Delete Provider
-// @route   DELETE /api/v1/Providers/:id
+// @desc    Delete provider
+// @route   DELETE /api/v1/providers/:id
 // @access  Private
 exports.deleteProvider = async (req, res, next) => {
   try {
@@ -145,24 +163,27 @@ exports.deleteProvider = async (req, res, next) => {
 
     if (!provider) {
       return res.status(404).json({
-          success: false,
-          message: `Provider not found with id of ${req.params.id}`
+        success: false,
+        message: `No provider found with ID ${req.params.id}`,
       });
-  }
+    }
 
-     // Delete all Bookings related to this Provider
-     await Booking.deleteMany({ Provider: req.params.id });
+    // Delete all bookings related to this provider
+    await Booking.deleteMany({ provider: req.params.id });
 
-     // Delete the Provider itself
-     await Provider.deleteOne({ _id: req.params.id });
+    // Delete the provider itself
+    await Provider.deleteOne({ _id: req.params.id });
 
     res.status(200).json({
       success: true,
+      message: "Provider and related bookings deleted",
       data: {},
     });
   } catch (err) {
+    console.error(err);
     res.status(400).json({
       success: false,
+      message: "Failed to delete provider",
     });
   }
 };

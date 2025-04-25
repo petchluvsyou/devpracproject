@@ -38,10 +38,10 @@ const ProviderSchema = new mongoose.Schema({
 });
 
 // Reverse populate with virtuals
-ProviderSchema.virtual('Bookings', {
+ProviderSchema.virtual('bookings', {
   ref: 'Booking',
   localField: '_id',
-  foreignField: 'Provider',
+  foreignField: 'provider',
   justOne: false
 });
 
