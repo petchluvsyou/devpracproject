@@ -1,0 +1,97 @@
+@startuml user
+
+actor User
+participant "Frontend"
+participant "<<router>>\n auth" as Router
+participant "<<middleware>>\nAuth" as Auth
+participant "<<middleware>>\nAuthorize" as Authorize
+participant "<<controllers>>\n User" as Controller
+participant "<<models>>\nUser" as UserModel
+participant "<<mongoDB>>\nUsers" as UsersDB
+participant sendTokenResponse
+
+group register
+User -> Frontend : Fill register form
+Frontend -> Router : POST /api/v1/auth/register
+Router -> Controller : register(req)
+Controller -> UserModel : create({ name, email, password, phone, role })
+UserModel -> UsersDB : Save user to database
+UsersDB --> UserModel : Acknowledgment
+UserModel --> Controller : created user
+Controller -> sendTokenResponse : sendTokenResponse(user, 200, res)
+sendTokenResponse -> UserModel : user.getSignedJwtToken()
+UserModel --> sendTokenResponse : JWT token
+sendTokenResponse --> Controller : response sent
+Controller --> Router : res.json({ user info, token })
+Router --> Frontend : show success
+end
+
+== ==
+
+group login
+User -> Frontend : Fill login form
+Frontend -> Router : POST /api/v1/auth/login
+Router -> Controller : login(req)
+Controller -> UserModel : findOne({ email }).select("+password")
+UserModel -> UsersDB : Query user by email
+UsersDB --> UserModel : user doc
+UserModel --> Controller : user doc
+Controller -> UserModel : user.matchPassword(password)
+UserModel --> Controller : true/false
+alt valid
+  Controller -> sendTokenResponse : sendTokenResponse(user, 200, res)
+  sendTokenResponse -> UserModel : user.getSignedJwtToken()
+  UserModel --> sendTokenResponse : JWT token
+  sendTokenResponse --> Controller : response sent
+  Controller --> Router : res.json({ user info, token })
+else invalid
+  Controller --> Router : res.status(401).json("Invalid credentials")
+end
+Router --> Frontend : show result
+end
+
+== ==
+
+group getMe
+User -> Frontend : Go to profile
+Frontend -> Router : GET /api/v1/auth/me
+Router -> Auth : validate JWT
+Auth --> Router : req.user
+Router -> Controller : getMe(req)
+Controller -> UserModel : findById(req.user.id)
+UserModel -> UsersDB : Query user by ID
+UsersDB --> UserModel : user
+UserModel --> Controller : user
+Controller --> Router : res.json(user)
+Router --> Frontend : show profile
+end
+
+== ==
+
+group logout
+User -> Frontend : Click logout
+Frontend -> Router : GET /api/v1/auth/logout
+Router -> Controller : logout(req)
+Controller -> Router : res.cookie("token", "none", { expires })
+Router --> Frontend : clear token and redirect
+end
+
+== ==
+
+group updateProfile
+User -> Frontend : Edit profile
+Frontend -> Router : PUT /api/v1/auth/:id
+Router -> Auth : validate JWT
+Auth --> Router : req.user
+Router -> Authorize : authorize('admin', 'user')
+Authorize --> Router : req.user
+Router -> Controller : updateUser(req)
+Controller -> UserModel : findByIdAndUpdate(req.params.id, req.body)
+UserModel -> UsersDB : Update user in database
+UsersDB --> UserModel : updated user
+UserModel --> Controller : updated user
+Controller --> Router : res.json({ updated user })
+Router --> Frontend : show success
+end
+
+@enduml

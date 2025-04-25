@@ -1,0 +1,91 @@
+@startuml provider
+actor User
+actor Admin
+participant Frontend
+participant "<<router>>\nproviders" as Router
+participant "<<middleware>>\nAuth" as Auth
+participant "<<controllers>>\nProvider" as Controller
+participant "<<models>>\nProvider" as ProviderModel
+participant "<<MongoDB>>\nProviders" as ProvidersDB
+
+group getProviders
+User -> Frontend : Visit provider list page
+Frontend -> Router : GET /api/v1/providers
+Router -> Auth : validate JWT + authorize
+Auth --> Router : req.user
+Router -> Controller : getProviders(req)
+Controller -> ProviderModel : find().populate('Bookings')
+ProviderModel -> ProvidersDB : Query providers
+ProvidersDB --> ProviderModel : providers
+ProviderModel --> Controller : providers
+Controller --> Router : res.json(providers)
+Router --> Frontend : show list
+end
+
+== ==
+
+group getProvider
+User -> Frontend : View provider detail
+Frontend -> Router : GET /api/v1/providers/:id
+Router -> Auth : validate JWT + authorize
+Auth --> Router : req.user
+Router -> Controller : getProvider(req)
+Controller -> ProviderModel : findById(req.params.id)
+ProviderModel -> ProvidersDB : Query provider by ID
+ProvidersDB --> ProviderModel : provider
+ProviderModel --> Controller : provider
+Controller --> Router : res.json(provider)
+Router --> Frontend : show provider detail
+end
+
+== ==
+
+group createProvider
+Admin -> Frontend : Fill add provider form
+Frontend -> Router : POST /api/v1/providers
+Router -> Auth : validate JWT + authorize("admin")
+Auth --> Router : req.user (admin)
+Router -> Controller : createProvider(req)
+Controller -> ProviderModel : create(req.body)
+ProviderModel -> ProvidersDB : Insert new provider
+ProvidersDB --> ProviderModel : new provider
+ProviderModel --> Controller : new provider
+Controller --> Router : res.status(201).json(provider)
+Router --> Frontend : show success
+end
+
+== ==
+
+group updateProvider
+Admin -> Frontend : Edit provider
+Frontend -> Router : PUT /api/v1/providers/:id
+Router -> Auth : validate JWT + authorize("admin")
+Auth --> Router : req.user (admin)
+Router -> Controller : updateProvider(req)
+Controller -> ProviderModel : findByIdAndUpdate(id, body)
+ProviderModel -> ProvidersDB : Update provider by ID
+ProvidersDB --> ProviderModel : updated provider
+ProviderModel --> Controller : updated provider
+Controller --> Router : res.json(provider)
+Router --> Frontend : show update result
+end
+
+== ==
+
+group deleteProvider
+Admin -> Frontend : Delete provider
+Frontend -> Router : DELETE /api/v1/providers/:id
+Router -> Auth : validate JWT + authorize("admin")
+Auth --> Router : req.user (admin)
+Router -> Controller : deleteProvider(req)
+Controller -> ProviderModel : findById(req.params.id)
+ProviderModel -> ProvidersDB : Query provider by ID
+ProvidersDB --> ProviderModel : provider
+Controller -> ProviderModel : deleteOne({ _id: id })
+Controller -> Booking : deleteMany({ Provider: id })
+ProviderModel --> Controller : deleted
+Controller --> Router : res.json(success)
+Router --> Frontend : show result
+end
+
+@enduml

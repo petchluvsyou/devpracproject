@@ -1,0 +1,41 @@
+@startuml classDiagram
+
+' --- Classes ---
+class Booking {
+  +Date bookingDate
+  +ObjectId user
+  +ObjectId Provider
+  +Date createdAt
+  +Boolean isDeleted
+}
+
+class Provider {
+  +String name
+  +String address
+  +String district
+  +String province
+  +String postalcode
+  +String tel
+  +String region
+  +Bookings : List<Booking>
+}
+
+class User {
+  +String name
+  +String phone
+  +String email
+  +String role
+  +String password
+  +String resetPasswordToken
+  +Date resetPasswordExpire
+  +Date createdAt
+  +getSignedJwtToken()
+  +matchPassword(enteredPassword)
+}
+
+' --- Relationships ---
+Booking "0..*" --> "1" Provider
+Booking "0..3" --> "1" User
+Provider "1" --> "0..*" Booking
+
+@enduml

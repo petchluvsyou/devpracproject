@@ -1,0 +1,148 @@
+@startuml booking
+actor User
+participant "Frontend"
+participant "<<router>>\n bookings" as Router
+participant "<<middleware>>\nAuth" as Auth
+participant "<<controllers>>\n Booking" as Controller
+participant "<<models>>\nBooking" as Booking
+participant "<<models>>\nProvider" as Provider
+participant "<<mongoDB>>\nBooking" as MongoDB_Booking
+participant "<<mongoDB>>\nProvider" as MongoDB_Provider
+participant "AI" as AI
+
+group getBookings
+User -> Frontend : Visit bookings page
+Frontend -> Router : GET /api/v1/bookings
+Router -> Auth : validate JWT
+Auth --> Router : req.user
+Router -> Controller : getBookings(req)
+
+alt user is not admin
+    Controller -> Booking : find({ user: req.user.id, isDeleted: false })
+else user is admin
+    alt with ProviderId
+        Controller -> Booking : find({ Provider: req.params.ProviderId })
+    else without ProviderId
+        Controller -> Booking : find({})
+    end
+end
+
+Booking -> MongoDB_Booking : query bookings
+MongoDB_Booking --> Booking : list of bookings
+Booking --> Controller : bookings
+Controller --> Router : res.json(bookings)
+Router --> Frontend : show bookings
+end
+
+== ==
+
+group getPastBookings
+User -> Frontend : View past bookings
+Frontend -> Router : GET /api/v1/bookings/past
+Router -> Auth : validate JWT
+Router -> Controller : getPastBookings(req)
+Controller -> Booking : find({ user: req.user.id })
+Booking -> MongoDB_Booking : query all (deleted and non-deleted)
+MongoDB_Booking --> Booking : past bookings
+Booking --> Controller : past bookings
+Controller --> Router : res.json(bookings)
+Router --> Frontend : show past bookings
+end
+
+== ==
+
+group getBooking
+User -> Frontend : Click on a booking
+Frontend -> Router : GET /api/v1/bookings/:id
+Router -> Auth : validate JWT
+Router -> Controller : getBooking(req)
+Controller -> Booking : findOne({ _id: req.params.id, isDeleted: false })
+Booking -> MongoDB_Booking : query booking by ID
+MongoDB_Booking --> Booking : booking
+Booking --> Controller : booking
+Controller --> Router : res.json(booking)
+Router --> Frontend : show booking details
+end
+
+== ==
+
+group addBooking
+User -> Frontend : Fill booking form
+Frontend -> Router : POST /api/v1/providers/:ProviderId/booking
+Router -> Auth : validate JWT
+Router -> Controller : addBooking(req)
+
+Controller -> Provider : findById(req.params.ProviderId)
+Provider -> MongoDB_Provider : query Provider by ID
+MongoDB_Provider --> Provider : Provider doc
+Provider --> Controller : Provider doc
+
+Controller -> Booking : countDocuments({ user: req.user.id, isDeleted: false })
+Booking -> MongoDB_Booking : count user's bookings
+MongoDB_Booking --> Booking : booking count
+
+alt booking count < 3
+    Controller -> AI : getTravelSuggestions(provider)
+    AI --> Controller : suggestions
+
+    Controller -> Booking : create(req.body)
+    Booking -> MongoDB_Booking : insert booking
+    MongoDB_Booking --> Booking : booking created
+    Booking --> Controller : booking
+    Controller --> Router : res.json({ booking, suggestions })
+else limit reached
+    Controller --> Router : res.status(400).json(error)
+end
+
+Router --> Frontend : show result
+end
+
+== ==
+
+group updateBooking
+User -> Frontend : Update booking
+Frontend -> Router : PUT /api/v1/bookings/:id
+Router -> Auth : validate JWT
+Router -> Controller : updateBooking(req)
+
+Controller -> Booking : findOne({ _id: req.params.id, isDeleted: false })
+Booking -> MongoDB_Booking : query booking by ID
+MongoDB_Booking --> Booking : booking
+Booking --> Controller : booking
+
+alt found & authorized
+    Controller -> Booking : findByIdAndUpdate(...)
+    Booking -> MongoDB_Booking : update booking
+    MongoDB_Booking --> Booking : updated booking
+    Booking --> Controller : updated booking
+    Controller --> Router : res.json(updated)
+else not found or unauthorized
+    Controller --> Router : error
+end
+Router --> Frontend : show result
+end
+
+== ==
+
+group deleteBooking
+User -> Frontend : Delete booking
+Frontend -> Router : DELETE /api/v1/bookings/:id
+Router -> Auth : validate JWT
+Router -> Controller : deleteBooking(req)
+
+Controller -> Booking : findById(req.params.id)
+Booking -> MongoDB_Booking : query booking
+MongoDB_Booking --> Booking : booking
+Booking --> Controller : booking
+
+alt found & authorized
+    Controller -> Booking : set isDeleted = true
+    Booking -> MongoDB_Booking : update booking
+    MongoDB_Booking --> Booking : success
+    Controller --> Router : res.json(success)
+else not found or unauthorized
+    Controller --> Router : error
+end
+Router --> Frontend : show result
+end
+@enduml
