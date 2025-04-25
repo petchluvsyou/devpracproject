@@ -18,9 +18,11 @@
   },
   "homepage": "https://github.com/2110503-67CP/a-4-petchluvsyou#readme",
   "dependencies": {
+    "axios": "^1.9.0",
     "bcryptjs": "^3.0.2",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
+    "depd": "^2.0.0",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "express-mongo-sanitize": "^2.2.0",

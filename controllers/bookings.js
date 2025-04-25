@@ -1,5 +1,6 @@
 const Booking = require('../models/Booking');
 const Provider = require('../models/Provider');
+const getTravelSuggestions = require('../utils/ai');
 
 // @desc    Get all Bookings
 // @route   GET /api/v1/Bookings
@@ -100,12 +101,19 @@ exports.addBooking = async (req, res, next) => {
                 message: "You can only have a maximum of 3 bookings."
             });
         }
+        
+        // Fetch AI-based travel suggestions based on the Provider's location (no user preferences)
+        const travelSuggestions = await getTravelSuggestions(provider);
+  
 
         const booking = await Booking.create(req.body);
 
         res.status(200).json({
             success: true,
-            data: booking
+            data: {
+                booking,
+                travelSuggestions
+            }
         });
     } catch (error) {
         console.log(error);
