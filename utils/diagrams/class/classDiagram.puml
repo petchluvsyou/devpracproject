@@ -4,7 +4,7 @@
 class Booking {
   +Date bookingDate
   +ObjectId user
-  +ObjectId Provider
+  +ObjectId provider
   +Date createdAt
   +Boolean isDeleted
 }
@@ -17,7 +17,7 @@ class Provider {
   +String postalcode
   +String tel
   +String region
-  +Bookings : List<Booking>
+  +bookings : List<Booking>
 }
 
 class User {
