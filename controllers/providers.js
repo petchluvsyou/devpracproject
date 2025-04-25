@@ -1,5 +1,5 @@
 const Provider = require("../models/Provider");
-const Booking = require('../models/Booking');
+const Booking = require("../models/Booking");
 
 // @desc    Get all Providers
 // @route   GET /api/v1/Providers
@@ -12,29 +12,31 @@ exports.getProviders = async (req, res, next) => {
     const reqQuery = { ...req.query };
 
     // Fields to exclude
-    const removeFields = ['select', 'sort', 'page', 'limit'];
-    removeFields.forEach(param => delete reqQuery[param]);
+    const removeFields = ["select", "sort", "page", "limit"];
+    removeFields.forEach((param) => delete reqQuery[param]);
 
     // Create query string
     let queryStr = JSON.stringify(reqQuery);
-    queryStr = queryStr.replace(/\b(gt|gte|lt|lte|in)\b/g, match => `$${match}`);
+    queryStr = queryStr.replace(
+      /\b(gt|gte|lt|lte|in)\b/g,
+      (match) => `$${match}`,
+    );
 
     // Finding resource
-    query = Provider.find(JSON.parse(queryStr)).populate('Bookings');
-
+    query = Provider.find(JSON.parse(queryStr)).populate("Bookings");
 
     // Select Fields
     if (req.query.select) {
-        const fields = req.query.select.split(',').join(' ');
-        query = query.select(fields);
+      const fields = req.query.select.split(",").join(" ");
+      query = query.select(fields);
     }
 
     // Sort
     if (req.query.sort) {
-        const sortBy = req.query.sort.split(',').join(' ');
-        query = query.sort(sortBy);
+      const sortBy = req.query.sort.split(",").join(" ");
+      query = query.sort(sortBy);
     } else {
-        query = query.sort('-createdAt');
+      query = query.sort("-createdAt");
     }
 
     // Pagination
@@ -53,24 +55,24 @@ exports.getProviders = async (req, res, next) => {
     const pagination = {};
 
     if (endIndex < total) {
-        pagination.next = {
-            page: page + 1,
-            limit
-        };
+      pagination.next = {
+        page: page + 1,
+        limit,
+      };
     }
 
     if (startIndex > 0) {
-        pagination.prev = {
-            page: page - 1,
-            limit
-        };
+      pagination.prev = {
+        page: page - 1,
+        limit,
+      };
     }
 
     res.status(200).json({
-        success: true,
-        count: providers.length,
-        pagination,
-        data: providers
+      success: true,
+      count: providers.length,
+      pagination,
+      data: providers,
     });
   } catch (err) {
     res.status(400).json({
@@ -145,16 +147,16 @@ exports.deleteProvider = async (req, res, next) => {
 
     if (!provider) {
       return res.status(404).json({
-          success: false,
-          message: `Provider not found with id of ${req.params.id}`
+        success: false,
+        message: `Provider not found with id of ${req.params.id}`,
       });
-  }
+    }
 
-     // Delete all Bookings related to this Provider
-     await Booking.deleteMany({ Provider: req.params.id });
+    // Delete all Bookings related to this Provider
+    await Booking.deleteMany({ Provider: req.params.id });
 
-     // Delete the Provider itself
-     await Provider.deleteOne({ _id: req.params.id });
+    // Delete the Provider itself
+    await Provider.deleteOne({ _id: req.params.id });
 
     res.status(200).json({
       success: true,

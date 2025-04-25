@@ -6,7 +6,7 @@ const UserSchema = new mongoose.Schema({
   name: {
     type: String,
     required: [true, "Please add a name"],
-  },  
+  },
   phone: {
     type: String,
     required: [true, "Please add a phone number"],
@@ -49,7 +49,6 @@ UserSchema.pre("save", async function (next) {
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
 });
-
 
 //Sign JWT and return
 UserSchema.methods.getSignedJwtToken = function () {
